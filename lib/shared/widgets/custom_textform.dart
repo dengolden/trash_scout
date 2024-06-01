@@ -5,7 +5,9 @@ class CustomTextform extends StatefulWidget {
   final String formTitle;
   final String hintText;
   final bool obscureText;
+  final TextInputType textInputType;
   final TextEditingController controller;
+  final String? Function(String?)? validator;
 
   const CustomTextform({
     super.key,
@@ -13,6 +15,8 @@ class CustomTextform extends StatefulWidget {
     required this.hintText,
     this.obscureText = false,
     required this.controller,
+    this.textInputType = TextInputType.text,
+    this.validator,
   });
 
   @override
@@ -66,6 +70,8 @@ class _CustomTextformState extends State<CustomTextform> {
             ),
           ),
           child: TextFormField(
+            validator: widget.validator,
+            keyboardType: widget.textInputType,
             controller: widget.controller,
             focusNode: _focusNode,
             style: regularTextStyle.copyWith(

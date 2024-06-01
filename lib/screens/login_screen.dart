@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/home_screen.dart';
+import 'package:trash_scout/screens/main_screen.dart';
 import 'package:trash_scout/screens/sign_up_screen.dart';
 import 'package:trash_scout/services/auth_service.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomeScreen(),
+          builder: (context) => MainScreen(),
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -131,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           CustomTextform(
                             formTitle: 'Email',
                             hintText: 'Masukan Email',
+                            textInputType: TextInputType.emailAddress,
                             controller: _emailController,
                           ),
                           const SizedBox(height: 20),
@@ -189,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SignUpScreen(),
+                                  builder: (context) => SignUpScreen(),
                                 ),
                               );
                             },

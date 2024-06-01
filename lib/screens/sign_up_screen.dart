@@ -6,6 +6,9 @@ import 'package:trash_scout/services/firestore_service.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/custom_button.dart';
 import 'package:trash_scout/shared/widgets/custom_textform.dart';
+import 'package:trash_scout/shared/widgets/date_of_birth_form.dart';
+import 'package:trash_scout/shared/widgets/gender_radio_button.dart';
+import 'package:trash_scout/shared/widgets/provinces_regencies_dropdown.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -18,11 +21,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _birthDateController = TextEditingController();
+
+  String? _selectedGender;
+  String? _selectedProvince;
+  String? _selectedRegency;
+
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
-  String _error = '';
 
-  Future<void> signUpUser() async {
+  Future<void> _signUp() async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -35,10 +44,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       },
     );
 
-    setState(() {
-      _error = '';
-    });
-
     try {
       UserCredential userCredential =
           await _authService.signUpWithEmailAndPassword(
@@ -46,16 +51,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         _passwordController.text,
       );
 
-      //Mengupdate display name
-      await _authService.updateDisplayName(
-        userCredential.user,
-        _nameController.text,
-      );
-
       await _firestoreService.saveUserData(
         userCredential.user?.uid ?? '',
-        _nameController.text,
         _emailController.text,
+        _nameController.text,
+        _birthDateController.text,
+        _selectedGender!,
+        _selectedProvince!,
+        _selectedRegency!,
+        _phoneNumberController.text,
       );
       Navigator.pop(context);
       Navigator.pushReplacement(
@@ -64,23 +68,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
           builder: (context) => LoginScreen(),
         ),
       );
+
+      // Navigate to the next screen or show a success message
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        switch (e.code) {
-          case 'weak-password':
-            _error = 'Password terlalu lemah.';
-            break;
-          case 'email-already-in-use':
-            _error = 'Email sudah digunakan oleh akun lain.';
-            break;
-          case 'invalid-email':
-            _error = 'Email yang dimasukkan tidak valid.';
-            break;
-          default:
-            _error = 'Terjadi kesalahan. Silakan coba lagi.';
-            break;
-        }
-      });
+      // Handle error, e.g., show a snackbar with the error message
+      print('Error: ${e.message}');
     }
   }
 
@@ -88,126 +80,133 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height,
-          ),
-          child: IntrinsicHeight(
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(
-                    top: 60,
-                    left: 16,
-                    right: 16,
-                  ),
-                  height: 200,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/sign_up_asset.png'),
-                    ),
-                  ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
+            ),
+            child: IntrinsicHeight(
+              child: Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: 16,
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.only(
-                    top: 23,
-                    left: 16,
-                    right: 16,
-                    bottom: 66,
-                  ),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: whiteColor,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(35),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Center(
-                        child: Text(
-                          'Buat Akun Anda',
-                          style: boldTextStyle.copyWith(
-                            fontSize: 26,
-                            color: blackColor,
-                          ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BackButton(),
+                    Center(
+                      child: Container(
+                        margin: EdgeInsets.only(
+                          top: 10,
                         ),
-                      ),
-                      const SizedBox(height: 35),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          CustomTextform(
-                            formTitle: 'Nama',
-                            hintText: 'Masukan Nama',
-                            controller: _nameController,
-                          ),
-                          const SizedBox(height: 8),
-                          CustomTextform(
-                            formTitle: 'Email',
-                            hintText: 'Masukan Email',
-                            controller: _emailController,
-                          ),
-                          const SizedBox(height: 8),
-                          CustomTextform(
-                            formTitle: 'Kata Sandi',
-                            hintText: 'Masukan Kata Sandi',
-                            obscureText: true,
-                            controller: _passwordController,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 48,
-                      ),
-                      CustomButton(
-                        onPressed: () {
-                          signUpUser();
-                        },
-                        buttonText: 'Daftar',
-                      ),
-                      if (_error.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: Text(
-                            _error,
-                            style: regularTextStyle.copyWith(
-                              color: redColor,
-                              fontSize: 16,
+                        width: 45,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(
+                              'assets/logo_without_text.png',
                             ),
                           ),
                         ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Sudah punya akun? ',
-                            style: mediumTextStyle.copyWith(
-                              color: lightGreyColor,
+                      ),
+                    ),
+                    SizedBox(height: 25),
+                    Center(
+                      child: Text(
+                        'Daftarkan Diri Anda',
+                        style: boldTextStyle.copyWith(
+                          color: blackColor,
+                          fontSize: 30,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 25),
+                    CustomTextform(
+                      formTitle: 'Nama',
+                      textInputType: TextInputType.name,
+                      hintText: 'Masukan Nama',
+                      controller: _nameController,
+                    ),
+                    SizedBox(height: 25),
+                    DateOfBirthForm(dateController: _birthDateController),
+                    SizedBox(height: 25),
+                    GenderForm(
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGender = value;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 25),
+                    ProvincesRegenciesDropdown(
+                      onProvinceChanged: (value) {
+                        setState(() {
+                          _selectedProvince = value['name'];
+                        });
+                      },
+                      onRegencyChanged: (value) {
+                        setState(() {
+                          _selectedRegency = value['name'];
+                        });
+                      },
+                    ),
+                    SizedBox(height: 25),
+                    CustomTextform(
+                      formTitle: 'No.HP (Opsional)',
+                      textInputType: TextInputType.phone,
+                      hintText: 'Masukkan No.HP',
+                      controller: _phoneNumberController,
+                    ),
+                    SizedBox(height: 25),
+                    CustomTextform(
+                      formTitle: 'Email',
+                      textInputType: TextInputType.emailAddress,
+                      hintText: 'Masukan Email',
+                      controller: _emailController,
+                    ),
+                    SizedBox(height: 25),
+                    CustomTextform(
+                      formTitle: 'Kata Sandi',
+                      hintText: 'Masukan Kata Sandi',
+                      obscureText: true,
+                      controller: _passwordController,
+                    ),
+                    SizedBox(height: 40),
+                    CustomButton(
+                        buttonText: 'Lanjut',
+                        onPressed: () {
+                          _signUp();
+                        }),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Sudah punya akun? ',
+                          style: mediumTextStyle.copyWith(
+                            color: lightGreyColor,
+                            fontSize: 15,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            'Masuk',
+                            style: semiBoldTextStyle.copyWith(
+                              color: darkGreenColor,
                               fontSize: 15,
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
-                            child: Text(
-                              'Masuk',
-                              style: semiBoldTextStyle.copyWith(
-                                color: darkGreenColor,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 30),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
