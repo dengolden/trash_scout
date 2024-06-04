@@ -79,7 +79,7 @@ class _CustomTextformState extends State<CustomTextform> {
               fontSize: 15,
             ),
             obscureText: widget.obscureText,
-            cursorHeight: 15,
+            cursorHeight: 20,
             cursorColor: lightGreenColor,
             decoration: InputDecoration(
               hintText: widget.hintText,

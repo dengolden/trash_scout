@@ -1,7 +1,15 @@
+import 'dart:io';
+import 'package:geolocator/geolocator.dart';
+import 'package:path/path.dart' as path;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:trash_scout/screens/home_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/custom_button.dart';
-import 'package:trash_scout/shared/widgets/trash_category.dart';
+import 'package:trash_scout/shared/widgets/trash_category_item.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreateReportPage extends StatefulWidget {
   const CreateReportPage({super.key});
@@ -11,6 +19,119 @@ class CreateReportPage extends StatefulWidget {
 }
 
 class _CreateReportPageState extends State<CreateReportPage> {
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  List<String> _selectedCategories = [];
+  File? _selectedImage;
+  String? _latitude;
+  String? _longitude;
+  final TextEditingController _locationDetailController =
+      TextEditingController();
+
+  void _handleCategoriesChanged(List<String> category) {
+    setState(() {
+      _selectedCategories = category;
+    });
+  }
+
+  void _handleImageChanged(File image) {
+    setState(() {
+      _selectedImage = image;
+    });
+  }
+
+  void _handleLocationChanged(String lat, String long) {
+    setState(() {
+      _latitude = lat;
+      _longitude = long;
+    });
+  }
+
+  Future<String> _uploadImage(File image) async {
+    String fileName = path.basename(image.path);
+    Reference storageRef =
+        FirebaseStorage.instance.ref().child('uploads/$fileName');
+    UploadTask uploadTask = storageRef.putFile(image);
+    TaskSnapshot snapshot = await uploadTask;
+    return await snapshot.ref.getDownloadURL();
+  }
+
+  void _submitReport() async {
+    if (formKey.currentState != null && formKey.currentState!.validate()) {
+      String title = _titleController.text;
+      List<String> categories = _selectedCategories;
+      String description = _descController.text;
+      String locationDetail = _locationDetailController.text;
+      if (title.isNotEmpty &&
+          categories.isNotEmpty &&
+          description.isNotEmpty &&
+          _selectedImage != null &&
+          _latitude != null &&
+          _longitude != null &&
+          locationDetail.isNotEmpty) {
+        try {
+          User? user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            String uid = user.uid;
+            String imageUrl = await _uploadImage(_selectedImage!);
+            String mapsUrl =
+                'https://www.google.com/maps?q=$_latitude,$_longitude';
+
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(uid)
+                .collection('reports')
+                .add({
+              'title': title,
+              'categories': categories,
+              'description': description,
+              'imageUrl': imageUrl,
+              'location': mapsUrl,
+              'locationDetail': locationDetail,
+              'date': Timestamp.now(),
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Laporan berhasil dikirim"),
+              ),
+            );
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("User tidak terautentikasi"),
+              ),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Gagal mengirim laporan: $e")));
+          print(e);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Harap isi semua field"),
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Form tidak valid"),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,18 +154,35 @@ class _CreateReportPageState extends State<CreateReportPage> {
           margin: EdgeInsets.symmetric(
             horizontal: 16,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ReportTitleForm(),
-              TrashCategory(),
-              ReportDescForm(),
-              UploadPhoto(),
-              SelectLocation(),
-              SizedBox(height: 30),
-              CustomButton(buttonText: 'Kirim Laporan', onPressed: () {}),
-              SizedBox(height: 50),
-            ],
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ReportTitleForm(
+                  titleController: _titleController,
+                ),
+                TrashCategory(onCategoryChanged: _handleCategoriesChanged),
+                ReportDescForm(
+                  descController: _descController,
+                ),
+                UploadPhoto(
+                  onFileChanged: _handleImageChanged,
+                ),
+                SelectLocation(
+                  onLocationChanged: _handleLocationChanged,
+                  locationDetailController: _locationDetailController,
+                ),
+                SizedBox(height: 30),
+                CustomButton(
+                  buttonText: 'Kirim Laporan',
+                  onPressed: () {
+                    _submitReport();
+                  },
+                ),
+                SizedBox(height: 50),
+              ],
+            ),
           ),
         ),
       ),
@@ -53,7 +191,8 @@ class _CreateReportPageState extends State<CreateReportPage> {
 }
 
 class ReportTitleForm extends StatelessWidget {
-  const ReportTitleForm({super.key});
+  final TextEditingController titleController;
+  const ReportTitleForm({required this.titleController});
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +207,13 @@ class ReportTitleForm extends StatelessWidget {
           ),
         ),
         TextFormField(
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Masukkan judul laporan';
+            }
+            return null;
+          },
+          controller: titleController,
           style: mediumTextStyle.copyWith(
             color: blackColor,
             fontSize: 24,
@@ -90,11 +236,43 @@ class ReportTitleForm extends StatelessWidget {
   }
 }
 
-class TrashCategory extends StatelessWidget {
-  const TrashCategory({super.key});
+class TrashCategory extends StatefulWidget {
+  final ValueChanged<List<String>> onCategoryChanged;
+  const TrashCategory({required this.onCategoryChanged});
+
+  @override
+  State<TrashCategory> createState() => _TrashCategoryState();
+}
+
+class _TrashCategoryState extends State<TrashCategory> {
+  List<String> selectedCategories = [];
+
+  void handleCategorySelected(String category) {
+    setState(() {
+      selectedCategories.add(category);
+    });
+    widget.onCategoryChanged(selectedCategories);
+  }
+
+  void handleCategoryDeselected(String category) {
+    setState(() {
+      selectedCategories.remove(category);
+    });
+    widget.onCategoryChanged(selectedCategories);
+  }
 
   @override
   Widget build(BuildContext context) {
+    List<String> categories = [
+      'Organik',
+      'Plastik',
+      'Kertas & Karton',
+      'Logam',
+      'Kaca',
+      'Elektronik',
+      'Berbahaya',
+    ];
+
     return Container(
       margin: EdgeInsets.only(
         top: 15,
@@ -120,15 +298,15 @@ class TrashCategory extends StatelessWidget {
             spacing: 6.0,
             runSpacing: 3.0,
             alignment: WrapAlignment.start,
-            children: [
-              TrashCategoryItem(title: 'Organik'),
-              TrashCategoryItem(title: 'Plastik'),
-              TrashCategoryItem(title: 'Kertas & Karton'),
-              TrashCategoryItem(title: 'Logam'),
-              TrashCategoryItem(title: 'Kaca'),
-              TrashCategoryItem(title: 'Elektronik'),
-              TrashCategoryItem(title: 'Berbahaya'),
-            ],
+            children: categories.map((category) {
+              bool isSelected = selectedCategories.contains(category);
+              return TrashCategoryItem(
+                title: category,
+                isSelected: isSelected,
+                onDeselected: handleCategoryDeselected,
+                onSelected: handleCategorySelected,
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -137,7 +315,8 @@ class TrashCategory extends StatelessWidget {
 }
 
 class ReportDescForm extends StatelessWidget {
-  const ReportDescForm({super.key});
+  final TextEditingController descController;
+  const ReportDescForm({super.key, required this.descController});
 
   @override
   Widget build(BuildContext context) {
@@ -156,13 +335,20 @@ class ReportDescForm extends StatelessWidget {
             ),
           ),
           TextFormField(
+            controller: descController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Masukkan deskripsi laporan';
+              }
+              return null;
+            },
             style: regularTextStyle.copyWith(
               color: darkGreyColor,
               fontSize: 14,
             ),
             decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: 'Masukan Deskripsi (Opsional)',
+              hintText: 'Masukan Deskripsi',
               hintStyle: regularTextStyle.copyWith(
                 color: darkGreyColor,
               ),
@@ -180,8 +366,40 @@ class ReportDescForm extends StatelessWidget {
   }
 }
 
-class UploadPhoto extends StatelessWidget {
-  const UploadPhoto({super.key});
+class UploadPhoto extends StatefulWidget {
+  final Function(File) onFileChanged;
+  const UploadPhoto({
+    super.key,
+    required this.onFileChanged,
+  });
+
+  @override
+  State<UploadPhoto> createState() => _UploadPhotoState();
+}
+
+class _UploadPhotoState extends State<UploadPhoto> {
+  final ImagePicker _picker = ImagePicker();
+  XFile? _imageFile;
+
+  Future<void> _pickImageFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    setState(() {
+      _imageFile = pickedFile;
+    });
+    if (pickedFile != null) {
+      widget.onFileChanged(File(pickedFile.path));
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _imageFile = pickedFile;
+    });
+    if (pickedFile != null) {
+      widget.onFileChanged(File(pickedFile.path));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -220,51 +438,69 @@ class UploadPhoto extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IntrinsicWidth(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 7,
-                        horizontal: 28,
-                      ),
-                      decoration: BoxDecoration(
-                        color: darkGreenColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Buka Kamera',
-                          style: mediumTextStyle.copyWith(
-                            color: whiteColor,
-                            fontSize: 16,
+                  if (_imageFile != null)
+                    Image.file(
+                      File(_imageFile!.path),
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                    )
+                  else
+                    Column(
+                      children: [
+                        GestureDetector(
+                          onTap: _pickImageFromCamera,
+                          child: IntrinsicWidth(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 7,
+                                horizontal: 28,
+                              ),
+                              decoration: BoxDecoration(
+                                color: darkGreenColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Buka Kamera',
+                                  style: mediumTextStyle.copyWith(
+                                    color: whiteColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  IntrinsicWidth(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 7,
-                        horizontal: 28,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: darkGreenColor,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Pilih di Galeri',
-                          style: mediumTextStyle.copyWith(
-                            color: darkGreenColor,
-                            fontSize: 16,
+                        SizedBox(height: 6),
+                        GestureDetector(
+                          onTap: _pickImageFromGallery,
+                          child: IntrinsicWidth(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 7,
+                                horizontal: 28,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: darkGreenColor,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Pilih di Galeri',
+                                  style: mediumTextStyle.copyWith(
+                                    color: darkGreenColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
                 ],
               ),
             ),
@@ -275,8 +511,58 @@ class UploadPhoto extends StatelessWidget {
   }
 }
 
-class SelectLocation extends StatelessWidget {
-  const SelectLocation({super.key});
+class SelectLocation extends StatefulWidget {
+  final Function(String, String) onLocationChanged;
+  final TextEditingController locationDetailController;
+
+  const SelectLocation({
+    required this.onLocationChanged,
+    required this.locationDetailController,
+    super.key,
+  });
+
+  @override
+  State<SelectLocation> createState() => _SelectLocationState();
+}
+
+class _SelectLocationState extends State<SelectLocation> {
+  late String lat;
+  late String long;
+
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Layanan lokasi tidak aktif"),
+        ),
+      );
+      return Future.error('Location services are disabled.');
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Izin lokasi ditolak"),
+          ),
+        );
+        return Future.error('Location Permission are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Izin lokasi ditolak secara permanen"),
+        ),
+      );
+      return Future.error('Permission is Denied Forever');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -297,17 +583,36 @@ class SelectLocation extends StatelessWidget {
           SizedBox(height: 10),
           CustomButton(
             buttonText: 'Ambil Lokasi',
-            onPressed: () {},
+            onPressed: () {
+              _getCurrentLocation().then((value) {
+                lat = '${value.latitude}';
+                long = '${value.longitude}';
+                print('Latitude: $lat , Longitude: $long');
+                widget.onLocationChanged(lat, long);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Lokasi berhasil diambil"),
+                  ),
+                );
+              }).catchError((error) {
+                print("Gagal mengambil lokasi! Error: $error");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Gagal mengambil lokasi"),
+                  ),
+                );
+              });
+            },
           ),
           SizedBox(height: 10),
           Text(
-            'Patokan lokasi (Opsional)',
+            'Detail lokasi',
             style: mediumTextStyle.copyWith(
               color: darkGreyColor,
             ),
           ),
           Text(
-            'Patokan untuk mempemudah Petugas',
+            'Detail untuk mempemudah Petugas',
             style: regularTextStyle.copyWith(
               color: darkGreyColor,
               fontSize: 12,
@@ -318,6 +623,13 @@ class SelectLocation extends StatelessWidget {
               color: darkGreyColor,
               fontSize: 13,
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Masukkan detail lokasi';
+              }
+              return null;
+            },
+            controller: widget.locationDetailController,
             decoration: InputDecoration(
               contentPadding: EdgeInsets.all(16),
               prefixIcon: Icon(
@@ -326,7 +638,7 @@ class SelectLocation extends StatelessWidget {
                 color: darkGreyColor,
               ),
               border: InputBorder.none,
-              hintText: 'Masukan Patokan Lokasi',
+              hintText: 'Masukan Detail Lokasi',
               hintStyle: regularTextStyle.copyWith(
                 color: darkGreyColor,
               ),
