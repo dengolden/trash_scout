@@ -3,85 +3,12 @@ import 'package:trash_scout/screens/detail_report_page.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 
 class ReportHistory extends StatelessWidget {
-  const ReportHistory({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(height: 8),
-        Align(
-          alignment: Alignment.center,
-          child: HistoryDate(
-            dateTime: 'Hari ini',
-          ),
-        ),
-        ReportHistoryItem(
-          reportTitle: 'Depan Rumah Pak RT',
-          status: 'Dibuat',
-          imageUrl: 'assets/trash_photo_1.png',
-          statusBackgroundColor: darkGreenColor,
-        ),
-        ReportHistoryItem(
-          reportTitle: 'Parkiran Mall B',
-          status: 'Diproses',
-          imageUrl: 'assets/trash_photo_2.png',
-          statusBackgroundColor: lightGreenColor,
-        ),
-        SizedBox(height: 8),
-        Align(
-          alignment: Alignment.center,
-          child: HistoryDate(
-            dateTime: '17 Agustus 2017',
-          ),
-        ),
-        ReportHistoryItem(
-          reportTitle: 'Sungai Amazon Kotor',
-          status: 'Selesai',
-          imageUrl: 'assets/trash_photo_3.png',
-          statusBackgroundColor: Color(0xff6BC2A2),
-        ),
-        SizedBox(height: 70),
-      ],
-    );
-  }
-}
-
-class HistoryDate extends StatelessWidget {
-  final String dateTime;
-
-  const HistoryDate({required this.dateTime});
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicWidth(
-      child: Container(
-        height: 25,
-        decoration: BoxDecoration(
-          color: Color(0xffE6E6E6),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 8),
-        alignment: Alignment.center,
-        child: Text(
-          dateTime,
-          style: regularTextStyle.copyWith(
-            color: blackColor,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class ReportHistoryItem extends StatelessWidget {
   final String reportTitle;
   final String status;
   final String imageUrl;
   final Color statusBackgroundColor;
 
-  const ReportHistoryItem({
+  const ReportHistory({
     required this.reportTitle,
     required this.status,
     required this.imageUrl,
@@ -118,7 +45,7 @@ class ReportHistoryItem extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
                       fit: BoxFit.cover,
-                      image: AssetImage(
+                      image: NetworkImage(
                         imageUrl,
                       ),
                     ),
@@ -192,6 +119,34 @@ class ReportHistoryItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class HistoryDate extends StatelessWidget {
+  final String dateTime;
+
+  const HistoryDate({required this.dateTime});
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicWidth(
+      child: Container(
+        height: 25,
+        decoration: BoxDecoration(
+          color: Color(0xffE6E6E6),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 8),
+        alignment: Alignment.center,
+        child: Text(
+          dateTime,
+          style: regularTextStyle.copyWith(
+            color: blackColor,
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }

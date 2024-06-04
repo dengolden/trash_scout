@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:trash_scout/screens/create_report_page.dart';
@@ -146,14 +147,44 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        Container(
-                          height: 330,
-                          child: ListView(
-                            scrollDirection: Axis.vertical,
-                            children: [
-                              ReportHistory(),
-                            ],
-                          ),
+                        SizedBox(
+                          height: 14,
+                        ),
+                        StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(user.uid)
+                              .collection('reports')
+                              .orderBy('date', descending: true)
+                              .limit(5)
+                              .snapshots(),
+                          builder:
+                              (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if (!snapshot.hasData) {
+                              return Center(child: CircularProgressIndicator());
+                            }
+                            var reports = snapshot.data!.docs;
+                            if (reports.isEmpty) {
+                              return Text(
+                                'Tidak ada laporan terbaru.',
+                                style: regularTextStyle.copyWith(
+                                  color: blackColor,
+                                  fontSize: 16,
+                                ),
+                              );
+                            }
+
+                            return Column(
+                              children: reports.map((report) {
+                                return ReportHistory(
+                                    reportTitle: report['title'],
+                                    status: report['status'],
+                                    imageUrl: report['imageUrl'],
+                                    statusBackgroundColor:
+                                        _getStatusColor(report['status']));
+                              }).toList(),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -165,6 +196,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Dibuat':
+        return darkGreenColor;
+      case 'Diproses':
+        return lightGreenColor;
+      case 'Selesai':
+        return Color(0xff6BC2A2);
+      default:
+        return darkGreyColor;
+    }
   }
 }
 
