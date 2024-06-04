@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/custom_button.dart';
-import 'package:trash_scout/shared/widgets/trash_category.dart';
 
 class DetailReportPage extends StatelessWidget {
   const DetailReportPage({super.key});
@@ -9,7 +8,7 @@ class DetailReportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: whiteColor,
       body: SingleChildScrollView(
         physics: ClampingScrollPhysics(),
         child: Stack(
@@ -99,13 +98,7 @@ class ReportDetailContent extends StatelessWidget {
         SizedBox(height: 16),
         Wrap(
           spacing: 8,
-          children: [
-            TrashCategoryItem(title: 'Organik'),
-            TrashCategoryItem(title: 'Plastik'),
-            TrashCategoryItem(title: 'Logam'),
-            TrashCategoryItem(title: 'Kertas & Karton'),
-            TrashCategoryItem(title: 'Berbahaya'),
-          ],
+          children: [],
         ),
         SizedBox(height: 16),
         Text(
