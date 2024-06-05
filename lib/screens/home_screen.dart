@@ -64,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         backgroundColor: backgroundColor,
         actions: [
           IconButton(
@@ -75,122 +76,120 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: NeverScrollableScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height,
-            ),
-            child: IntrinsicHeight(
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 16),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                HomeScreenHeader(
+                  userDisplayName: displayName,
+                ),
+                SizedBox(height: 20),
+                // Make Report BUtton
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
-                    HomeScreenHeader(
-                      userDisplayName: displayName,
+                    Text(
+                      'Tumpukan sampah ilegal?',
+                      style: mediumTextStyle.copyWith(
+                        fontSize: 16,
+                        color: blackColor,
+                      ),
                     ),
-                    SizedBox(height: 20),
-                    // Make Report BUtton
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tumpukan sampah ilegal?',
-                          style: mediumTextStyle.copyWith(
-                            fontSize: 16,
-                            color: blackColor,
+                    SizedBox(height: 14),
+                    CustomButton(
+                      buttonText: 'Buat Laporan',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreateReportPage(),
                           ),
-                        ),
-                        SizedBox(height: 14),
-                        CustomButton(
-                          buttonText: 'Buat Laporan',
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CreateReportPage(),
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(height: 19),
-                        ReportRecapHomeScreen(),
-                        SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Riwayat Laporan',
-                              style: boldTextStyle.copyWith(
-                                color: blackColor,
-                                fontSize: 20,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SeeAllHistoryPage(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Lihat Semua',
-                                style: mediumTextStyle.copyWith(
-                                  color: blackColor,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 14,
-                        ),
-                        StreamBuilder(
-                          stream: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(user.uid)
-                              .collection('reports')
-                              .orderBy('date', descending: true)
-                              .limit(5)
-                              .snapshots(),
-                          builder:
-                              (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                            if (!snapshot.hasData) {
-                              return Center(child: CircularProgressIndicator());
-                            }
-                            var reports = snapshot.data!.docs;
-                            if (reports.isEmpty) {
-                              return Text(
-                                'Tidak ada laporan terbaru.',
-                                style: regularTextStyle.copyWith(
-                                  color: blackColor,
-                                  fontSize: 16,
-                                ),
-                              );
-                            }
-
-                            return Column(
-                              children: reports.map((report) {
-                                return ReportHistory(
-                                    reportTitle: report['title'],
-                                    status: report['status'],
-                                    imageUrl: report['imageUrl'],
-                                    statusBackgroundColor:
-                                        _getStatusColor(report['status']));
-                              }).toList(),
-                            );
-                          },
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ],
                 ),
-              ),
+                SizedBox(height: 19),
+                ReportRecapHomeScreen(),
+                SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Riwayat Laporan',
+                      style: boldTextStyle.copyWith(
+                        color: blackColor,
+                        fontSize: 20,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SeeAllHistoryPage(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Lihat Semua',
+                        style: mediumTextStyle.copyWith(
+                          color: blackColor,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 14,
+                ),
+                StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('reports')
+                      .orderBy('date', descending: true)
+                      .limit(5)
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (!snapshot.hasData) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    var reports = snapshot.data!.docs;
+                    if (reports.isEmpty) {
+                      return Text(
+                        'Tidak ada laporan terbaru.',
+                        style: regularTextStyle.copyWith(
+                          color: blackColor,
+                          fontSize: 16,
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: reports.length,
+                      itemBuilder: (context, index) {
+                        var report = reports[index];
+                        return ReportHistory(
+                          reportTitle: report['title'],
+                          status: report['status'],
+                          imageUrl: report['imageUrl'],
+                          statusBackgroundColor: _getStatusColor(
+                            report['status'],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+                SizedBox(height: 90),
+              ],
             ),
           ),
         ),

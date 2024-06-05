@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trash_scout/firebase_options.dart';
-import 'package:trash_scout/provider/user_provider.dart';
+import 'package:trash_scout/provider/bottom_navigation_provider.dart';
 import 'package:trash_scout/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -11,8 +11,8 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => UserProvider(),
-        ),
+          create: (context) => BottomNavigationProvider(),
+        )
       ],
       child: const MyApp(),
     ),

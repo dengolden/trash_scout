@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trash_scout/provider/bottom_navigation_provider.dart';
 import 'package:trash_scout/screens/home_screen.dart';
+import 'package:trash_scout/screens/map_screen.dart';
+import 'package:trash_scout/screens/profile_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/custom_bottom_navigation_item.dart';
 
@@ -23,7 +27,19 @@ class MainScreen extends StatelessWidget {
 }
 
 Widget buildContent(BuildContext context) {
-  return HomeScreen();
+  final navigationProvider = Provider.of<BottomNavigationProvider>(context);
+  int currentIndex = navigationProvider.currentIndex;
+
+  switch (currentIndex) {
+    case 0:
+      return HomeScreen();
+    case 1:
+      return MapScreen(); // Replace with your map screen
+    case 2:
+      return ProfileScreen(); // Replace with your profile screen
+    default:
+      return HomeScreen();
+  }
 }
 
 class CustomBottomNavigation extends StatelessWidget {
@@ -31,6 +47,8 @@ class CustomBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final navigationProvider = Provider.of<BottomNavigationProvider>(context);
+
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -52,15 +70,26 @@ class CustomBottomNavigation extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            CustomBottomNavigationItem(
-              imageUrl: 'assets/home_icon.png',
-              isActive: true,
+            GestureDetector(
+              onTap: () => navigationProvider.currentIndex = 0,
+              child: CustomBottomNavigationItem(
+                imageUrl: 'assets/home_icon.png',
+                index: 0,
+              ),
             ),
-            CustomBottomNavigationItem(
-              imageUrl: 'assets/map_icon.png',
+            GestureDetector(
+              onTap: () => navigationProvider.currentIndex = 1,
+              child: CustomBottomNavigationItem(
+                imageUrl: 'assets/map_icon.png',
+                index: 1,
+              ),
             ),
-            CustomBottomNavigationItem(
-              imageUrl: 'assets/profile_icon.png',
+            GestureDetector(
+              onTap: () => navigationProvider.currentIndex = 2,
+              child: CustomBottomNavigationItem(
+                imageUrl: 'assets/profile_icon.png',
+                index: 2,
+              ),
             ),
           ],
         ),
