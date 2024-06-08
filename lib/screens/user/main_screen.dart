@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trash_scout/provider/bottom_navigation_provider.dart';
-import 'package:trash_scout/screens/home_screen.dart';
-import 'package:trash_scout/screens/map_screen.dart';
-import 'package:trash_scout/screens/profile_screen.dart';
+import 'package:trash_scout/screens/user/home_screen.dart';
+import 'package:trash_scout/screens/user/map_screen.dart';
+import 'package:trash_scout/screens/user/profile_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/custom_bottom_navigation_item.dart';
+import 'package:trash_scout/shared/widgets/user/custom_bottom_navigation_item.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -34,9 +34,9 @@ Widget buildContent(BuildContext context) {
     case 0:
       return HomeScreen();
     case 1:
-      return MapScreen(); // Replace with your map screen
+      return MapScreen();
     case 2:
-      return ProfileScreen(); // Replace with your profile screen
+      return ProfileScreen();
     default:
       return HomeScreen();
   }

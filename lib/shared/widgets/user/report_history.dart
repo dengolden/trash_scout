@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/detail_report_page.dart';
+import 'package:trash_scout/screens/user/detail_report_page.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 
 class ReportHistory extends StatelessWidget {
@@ -7,12 +7,24 @@ class ReportHistory extends StatelessWidget {
   final String status;
   final String imageUrl;
   final Color statusBackgroundColor;
+  final String description;
+  final String date;
+  final List<String> categories;
+  final String latitude;
+  final String longitude;
+  final String locationDetail;
 
   const ReportHistory({
     required this.reportTitle,
     required this.status,
     required this.imageUrl,
     required this.statusBackgroundColor,
+    required this.description,
+    required this.date,
+    required this.categories,
+    required this.latitude,
+    required this.longitude,
+    required this.locationDetail,
   });
 
   @override
@@ -96,7 +108,17 @@ class ReportHistory extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DetailReportPage(),
+                  builder: (context) => DetailReportPage(
+                    reportTitle: reportTitle,
+                    imageUrl: imageUrl,
+                    description: description,
+                    status: status,
+                    date: date,
+                    categories: categories,
+                    latitude: latitude,
+                    longitude: longitude,
+                    locationDetail: locationDetail,
+                  ),
                 ),
               );
             },
@@ -133,6 +155,9 @@ class HistoryDate extends StatelessWidget {
   Widget build(BuildContext context) {
     return IntrinsicWidth(
       child: Container(
+        margin: EdgeInsets.only(
+          top: 8,
+        ),
         height: 25,
         decoration: BoxDecoration(
           color: Color(0xffE6E6E6),

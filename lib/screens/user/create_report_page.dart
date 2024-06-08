@@ -5,10 +5,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/main_screen.dart';
+import 'package:trash_scout/screens/user/main_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/custom_button.dart';
-import 'package:trash_scout/shared/widgets/trash_category_item.dart';
+import 'package:trash_scout/shared/widgets/user/custom_button.dart';
+import 'package:trash_scout/shared/widgets/user/trash_category_item.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CreateReportPage extends StatefulWidget {
@@ -87,7 +87,9 @@ class _CreateReportPageState extends State<CreateReportPage> {
               'categories': categories,
               'description': description,
               'imageUrl': imageUrl,
-              'location': mapsUrl,
+              'latitude': _latitude,
+              'longitude': _longitude,
+              'locationUrl': mapsUrl,
               'locationDetail': locationDetail,
               'status': 'Dibuat',
               'date': Timestamp.now(),

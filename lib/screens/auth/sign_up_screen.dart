@@ -1,14 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/login_screen.dart';
+import 'package:trash_scout/screens/auth/login_screen.dart';
 import 'package:trash_scout/services/auth_service.dart';
 import 'package:trash_scout/services/firestore_service.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/custom_button.dart';
-import 'package:trash_scout/shared/widgets/custom_textform.dart';
-import 'package:trash_scout/shared/widgets/date_of_birth_form.dart';
-import 'package:trash_scout/shared/widgets/gender_radio_button.dart';
-import 'package:trash_scout/shared/widgets/provinces_regencies_dropdown.dart';
+import 'package:trash_scout/shared/widgets/user/custom_button.dart';
+import 'package:trash_scout/shared/widgets/user/custom_textform.dart';
+import 'package:trash_scout/shared/widgets/user/date_of_birth_form.dart';
+import 'package:trash_scout/shared/widgets/user/gender_radio_button.dart';
+import 'package:trash_scout/shared/widgets/user/provinces_regencies_dropdown.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -23,10 +23,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _birthDateController = TextEditingController();
+  final String _role = 'user';
 
   String? _selectedGender;
   String? _selectedProvince;
   String? _selectedRegency;
+  final String defaultProfileImageUrl =
+      'https://firebasestorage.googleapis.com/v0/b/trash-scout-3c117.appspot.com/o/users%2Fdefault_profile_image%2Fuser%20default%20profile.png?alt=media&token=79ef1308-3d3d-477d-b566-0c4e66848a4d';
 
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
@@ -55,11 +58,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         userCredential.user?.uid ?? '',
         _emailController.text,
         _nameController.text,
+        _role,
         _birthDateController.text,
         _selectedGender!,
         _selectedProvince!,
         _selectedRegency!,
         _phoneNumberController.text,
+        defaultProfileImageUrl,
       );
       Navigator.pop(context);
       Navigator.pushReplacement(

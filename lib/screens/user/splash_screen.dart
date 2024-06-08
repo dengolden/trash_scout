@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/auth_page.dart';
+import 'package:trash_scout/screens/auth/auth_page.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 
 class SplashScreen extends StatefulWidget {

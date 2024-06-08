@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/custom_radio_button.dart';
+import 'package:trash_scout/shared/widgets/user/custom_radio_button.dart';
 
 class GenderForm extends StatefulWidget {
   final ValueChanged<String> onChanged;

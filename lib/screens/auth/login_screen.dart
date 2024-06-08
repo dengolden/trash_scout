@@ -1,11 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/main_screen.dart';
-import 'package:trash_scout/screens/sign_up_screen.dart';
-import 'package:trash_scout/services/auth_service.dart';
+import 'package:trash_scout/screens/admin/main_admin_screen.dart';
+import 'package:trash_scout/screens/user/main_screen.dart';
+import 'package:trash_scout/screens/auth/sign_up_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/custom_button.dart';
-import 'package:trash_scout/shared/widgets/custom_textform.dart';
+import 'package:trash_scout/shared/widgets/user/custom_button.dart';
+import 'package:trash_scout/shared/widgets/user/custom_textform.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,7 +18,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   String _error = '';
 
 // User Login
@@ -38,36 +39,69 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await _authService.loginUser(
-        _emailController.text,
-        _passwordController.text,
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
       );
+
+      User user = userCredential.user!;
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
       Navigator.pop(context);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MainScreen(),
-        ),
-      );
+
+      if (userDoc.exists) {
+        String role = userDoc['role'];
+        if (role == 'admin') {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AdminMainScreen(),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MainScreen(),
+              ),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _error = 'User not found in database';
+          });
+        }
+      }
     } on FirebaseAuthException catch (e) {
       // Conditional Error
-      setState(() {
-        switch (e.code) {
-          case 'wrong-password':
-            _error = 'Password yang dimasukkan salah.';
-            break;
-          case 'user-not-found':
-            _error = 'Pengguna dengan email ini tidak ditemukan.';
-            break;
-          case 'invalid-email':
-            _error = 'Email yang dimasukkan tidak valid.';
-            break;
-          default:
-            _error = 'Terjadi kesalahan. Silakan coba lagi.';
-            break;
-        }
-        Navigator.pop(context);
-      });
+      if (mounted) {
+        setState(() {
+          switch (e.code) {
+            case 'wrong-password':
+              _error = 'Password yang dimasukkan salah.';
+              break;
+            case 'user-not-found':
+              _error = 'Pengguna dengan email ini tidak ditemukan.';
+              break;
+            case 'invalid-email':
+              _error = 'Email yang dimasukkan tidak valid.';
+              break;
+            default:
+              _error = 'Terjadi kesalahan. Silakan coba lagi.';
+              break;
+          }
+          Navigator.pop(context);
+        });
+      }
     }
   }
 

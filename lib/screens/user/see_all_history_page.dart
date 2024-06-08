@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:trash_scout/shared/date_formatter.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/report_history.dart';
+import 'package:trash_scout/shared/widgets/user/report_history.dart';
 
 class SeeAllHistoryPage extends StatefulWidget {
   const SeeAllHistoryPage({super.key});
@@ -48,6 +49,7 @@ class _SeeAllHistoryPageState extends State<SeeAllHistoryPage> {
             fontSize: 26,
           ),
         ),
+        centerTitle: true,
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(6.0), // Tinggi garis
           child: Container(
@@ -96,6 +98,10 @@ class _SeeAllHistoryPageState extends State<SeeAllHistoryPage> {
                         children: [
                           HistoryDate(dateTime: date),
                           ...reports.map((report) {
+                            String formattedDate = DateFormat('dd MMMM yyyy')
+                                .format((report['date'] as Timestamp).toDate());
+                            final List<String> categories =
+                                List<String>.from(report['categories']);
                             return ReportHistory(
                               reportTitle: report['title'],
                               status: report['status'],
@@ -103,6 +109,12 @@ class _SeeAllHistoryPageState extends State<SeeAllHistoryPage> {
                               statusBackgroundColor: _getStatusColor(
                                 report['status'],
                               ),
+                              description: report['description'],
+                              date: formattedDate,
+                              categories: categories,
+                              latitude: report['latitude'],
+                              longitude: report['longitude'],
+                              locationDetail: report['locationDetail'],
                             );
                           }).toList(),
                         ],

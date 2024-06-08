@@ -1,15 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/create_report_page.dart';
-import 'package:trash_scout/screens/login_screen.dart';
-import 'package:trash_scout/screens/notification_history_screen.dart';
-import 'package:trash_scout/screens/see_all_history_page.dart';
+import 'package:intl/intl.dart';
+import 'package:trash_scout/screens/user/create_report_page.dart';
+import 'package:trash_scout/screens/auth/login_screen.dart';
+import 'package:trash_scout/screens/user/notification_history_screen.dart';
+import 'package:trash_scout/screens/user/see_all_history_page.dart';
 import 'package:trash_scout/services/firestore_service.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
-import 'package:trash_scout/shared/widgets/custom_button.dart';
-import 'package:trash_scout/shared/widgets/report_history.dart';
-import 'package:trash_scout/shared/widgets/report_recap_widget.dart';
+import 'package:trash_scout/shared/widgets/user/custom_button.dart';
+import 'package:trash_scout/shared/widgets/user/report_history.dart';
+import 'package:trash_scout/shared/widgets/user/report_recap_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final user = FirebaseAuth.instance.currentUser!;
   final FirestoreService _firestoreService = FirestoreService();
   String? displayName;
+  String? displayProfilePicture;
 
   @override
   void initState() {
@@ -31,9 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _getUserData() async {
     String? name = await _firestoreService.getUserName(user.uid);
-
+    String? photo = await _firestoreService.getUserPhoto(user.uid);
     setState(() {
       displayName = name;
+      displayProfilePicture = photo;
     });
   }
 
@@ -65,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: backgroundColor,
       appBar: AppBar(
         scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
         backgroundColor: backgroundColor,
         actions: [
           IconButton(
@@ -85,6 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Header
                 HomeScreenHeader(
+                  profilePicture: displayProfilePicture,
                   userDisplayName: displayName,
                 ),
                 SizedBox(height: 20),
@@ -114,7 +119,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 SizedBox(height: 19),
-                ReportRecapHomeScreen(),
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('reports')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                          child: CircularProgressIndicator(
+                        color: darkGreenColor,
+                      ));
+                    }
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return ReportRecapHomeScreen(
+                        totalCreated: 0,
+                        totalInProcess: 0,
+                        totalCompleted: 0,
+                      );
+                    }
+                    var reports = snapshot.data!.docs;
+                    int totalCreated = reports.length;
+                    int totalInProcess = reports
+                        .where((doc) => doc['status'] == 'Diproses')
+                        .length;
+                    int totalCompleted = reports
+                        .where((doc) => doc['status'] == 'Selesai')
+                        .length;
+                    return ReportRecapHomeScreen(
+                      totalCreated: totalCreated,
+                      totalInProcess: totalInProcess,
+                      totalCompleted: totalCompleted,
+                    );
+                  },
+                ),
                 SizedBox(height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -158,7 +197,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       .snapshots(),
                   builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (!snapshot.hasData) {
-                      return Center(child: CircularProgressIndicator());
+                      return Center(
+                          child: CircularProgressIndicator(
+                        color: darkGreenColor,
+                      ));
                     }
                     var reports = snapshot.data!.docs;
                     if (reports.isEmpty) {
@@ -176,13 +218,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       itemCount: reports.length,
                       itemBuilder: (context, index) {
                         var report = reports[index];
+                        String formattedDate = DateFormat('dd MMMM yyyy')
+                            .format((report['date'] as Timestamp).toDate());
+                        final List<String> categories =
+                            List<String>.from(report['categories']);
                         return ReportHistory(
                           reportTitle: report['title'],
                           status: report['status'],
                           imageUrl: report['imageUrl'],
-                          statusBackgroundColor: _getStatusColor(
-                            report['status'],
-                          ),
+                          statusBackgroundColor:
+                              _getStatusColor(report['status']),
+                          description: report['description'],
+                          date: formattedDate,
+                          categories: categories,
+                          latitude: report['latitude'],
+                          longitude: report['longitude'],
+                          locationDetail: report['locationDetail'],
                         );
                       },
                     );
@@ -213,8 +264,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class HomeScreenHeader extends StatelessWidget {
   final String? userDisplayName;
+  final String? profilePicture;
 
-  const HomeScreenHeader({required this.userDisplayName, super.key});
+  const HomeScreenHeader({
+    required this.userDisplayName,
+    required this.profilePicture,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -225,12 +281,13 @@ class HomeScreenHeader extends StatelessWidget {
         Row(
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 image: DecorationImage(
-                  image: AssetImage('assets/avatar_man.png'),
+                  image: NetworkImage(profilePicture ??
+                      'https://firebasestorage.googleapis.com/v0/b/trash-scout-3c117.appspot.com/o/users%2Fdefault_profile_image%2Fuser%20default%20profile.png?alt=media&token=79ef1308-3d3d-477d-b566-0c4e66848a4d'),
                 ),
               ),
             ),
@@ -246,7 +303,7 @@ class HomeScreenHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Ayo bersihkan Bumi kita!',
+                  'Ayo Bersihkan Bumi Kita!',
                   style: regularTextStyle.copyWith(
                     color: lightGreyColor,
                     fontSize: 15,
@@ -288,7 +345,15 @@ class HomeScreenHeader extends StatelessWidget {
 }
 
 class ReportRecapHomeScreen extends StatelessWidget {
-  const ReportRecapHomeScreen({super.key});
+  final int totalCreated;
+  final int totalInProcess;
+  final int totalCompleted;
+
+  const ReportRecapHomeScreen({
+    required this.totalCreated,
+    required this.totalInProcess,
+    required this.totalCompleted,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -306,7 +371,7 @@ class ReportRecapHomeScreen extends StatelessWidget {
         Row(
           children: [
             ReportRecapWidget(
-              totalReport: 150,
+              totalReport: totalCreated,
               reportTitle: 'Dibuat',
               backgroundColor: darkGreenColor,
               iconBackgroundColor: Color(
@@ -315,7 +380,7 @@ class ReportRecapHomeScreen extends StatelessWidget {
             ),
             SizedBox(width: 6),
             ReportRecapWidget(
-              totalReport: 80,
+              totalReport: totalInProcess,
               reportTitle: 'Diproses',
               backgroundColor: lightGreenColor,
               iconBackgroundColor: Color(
@@ -324,7 +389,7 @@ class ReportRecapHomeScreen extends StatelessWidget {
             ),
             SizedBox(width: 6),
             ReportRecapWidget(
-              totalReport: 21,
+              totalReport: totalCompleted,
               reportTitle: 'Selesai',
               backgroundColor: Color(0xff6BC2A2),
               iconBackgroundColor: Color(
