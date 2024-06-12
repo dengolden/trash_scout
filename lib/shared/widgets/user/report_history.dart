@@ -128,7 +128,7 @@ class ReportHistory extends StatelessWidget {
                 horizontal: 12,
               ),
               decoration: BoxDecoration(
-                color: blackColor,
+                color: lightGreenColor,
                 borderRadius: BorderRadius.circular(5),
               ),
               child: Text(

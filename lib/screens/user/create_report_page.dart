@@ -5,9 +5,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/user/main_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/custom_button.dart';
+import 'package:trash_scout/shared/widgets/user/success_screen.dart';
 import 'package:trash_scout/shared/widgets/user/trash_category_item.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -30,22 +30,28 @@ class _CreateReportPageState extends State<CreateReportPage> {
       TextEditingController();
 
   void _handleCategoriesChanged(List<String> category) {
-    setState(() {
-      _selectedCategories = category;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedCategories = category;
+      });
+    }
   }
 
   void _handleImageChanged(File image) {
-    setState(() {
-      _selectedImage = image;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedImage = image;
+      });
+    }
   }
 
   void _handleLocationChanged(String lat, String long) {
-    setState(() {
-      _latitude = lat;
-      _longitude = long;
-    });
+    if (mounted) {
+      setState(() {
+        _latitude = lat;
+        _longitude = long;
+      });
+    }
   }
 
   Future<String> _uploadImage(File image) async {
@@ -58,6 +64,101 @@ class _CreateReportPageState extends State<CreateReportPage> {
   }
 
   void _submitReport() async {
+    if (formKey.currentState != null && formKey.currentState!.validate()) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            backgroundColor: backgroundColor,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/confirmation_icon.png', // Ganti dengan path gambar Anda
+                  height: 200,
+                ),
+                SizedBox(height: 14),
+                Text(
+                  'Yakin dengan Laporannya?',
+                  style: semiBoldTextStyle.copyWith(
+                    color: blackColor,
+                    fontSize: 20,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Jika belum yakin periksalah kembali',
+                  style: regularTextStyle.copyWith(
+                      color: lightGreyColor, fontSize: 15),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 120,
+                      height: 44,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: blackColor,
+                          )),
+                      child: Center(
+                        child: Text(
+                          'Belum yakin',
+                          style: boldTextStyle.copyWith(
+                              color: blackColor, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _submitReportConfirmed();
+                    },
+                    child: Container(
+                      width: 140,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: darkGreenColor,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Sudah Yakin',
+                          style: boldTextStyle.copyWith(
+                              color: whiteColor, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Form tidak valid"),
+        ),
+      );
+    }
+  }
+
+  void _submitReportConfirmed() async {
     if (formKey.currentState != null && formKey.currentState!.validate()) {
       String title = _titleController.text;
       List<String> categories = _selectedCategories;
@@ -95,16 +196,10 @@ class _CreateReportPageState extends State<CreateReportPage> {
               'date': Timestamp.now(),
             });
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Laporan berhasil dikirim"),
-              ),
-            );
-
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => MainScreen(),
+                builder: (context) => SuccessScreen(),
               ),
             );
           } else {
@@ -251,16 +346,20 @@ class _TrashCategoryState extends State<TrashCategory> {
   List<String> selectedCategories = [];
 
   void handleCategorySelected(String category) {
-    setState(() {
-      selectedCategories.add(category);
-    });
+    if (mounted) {
+      setState(() {
+        selectedCategories.add(category);
+      });
+    }
     widget.onCategoryChanged(selectedCategories);
   }
 
   void handleCategoryDeselected(String category) {
-    setState(() {
-      selectedCategories.remove(category);
-    });
+    if (mounted) {
+      setState(() {
+        selectedCategories.remove(category);
+      });
+    }
     widget.onCategoryChanged(selectedCategories);
   }
 
@@ -386,9 +485,11 @@ class _UploadPhotoState extends State<UploadPhoto> {
 
   Future<void> _pickImageFromCamera() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-    setState(() {
-      _imageFile = pickedFile;
-    });
+    if (mounted) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
     if (pickedFile != null) {
       widget.onFileChanged(File(pickedFile.path));
     }
@@ -396,9 +497,11 @@ class _UploadPhotoState extends State<UploadPhoto> {
 
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      _imageFile = pickedFile;
-    });
+    if (mounted) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
     if (pickedFile != null) {
       widget.onFileChanged(File(pickedFile.path));
     }
@@ -586,25 +689,44 @@ class _SelectLocationState extends State<SelectLocation> {
           SizedBox(height: 10),
           CustomButton(
             buttonText: 'Ambil Lokasi',
-            onPressed: () {
-              _getCurrentLocation().then((value) {
-                lat = '${value.latitude}';
-                long = '${value.longitude}';
+            onPressed: () async {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: darkGreenColor,
+                    ),
+                  );
+                },
+              );
+
+              try {
+                Position position = await _getCurrentLocation();
+                lat = '${position.latitude}';
+                long = '${position.longitude}';
                 print('Latitude: $lat , Longitude: $long');
                 widget.onLocationChanged(lat, long);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("Lokasi berhasil diambil"),
+                    backgroundColor: whiteColor,
+                    content: Text(
+                      "Lokasi berhasil diambil",
+                      style: regularTextStyle.copyWith(color: blackColor),
+                    ),
                   ),
                 );
-              }).catchError((error) {
+              } catch (error) {
                 print("Gagal mengambil lokasi! Error: $error");
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text("Gagal mengambil lokasi"),
                   ),
                 );
-              });
+              } finally {
+                Navigator.pop(context); // Menutup dialog loading
+              }
             },
           ),
           SizedBox(height: 10),

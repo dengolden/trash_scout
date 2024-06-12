@@ -21,6 +21,7 @@ class FirestoreService {
       'email': email,
       'role': role,
       'birthdate': birthdate,
+      'gender': gender,
       'province': province,
       'regency': regency,
       'phoneNumber': phoneNumber,
@@ -46,5 +47,41 @@ class FirestoreService {
     } else {
       return null;
     }
+  }
+
+  Future<void> addNotification(
+      String userId, String reportTitle, bool isDone) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .add({
+      'reportTitle': reportTitle,
+      'isDone': isDone,
+      'dateTime': Timestamp.now(),
+    });
+  }
+
+  Future<void> updateReportStatus(
+      String userId, String reportId, String newStatus) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('reports')
+        .doc(reportId)
+        .update({
+      'status': newStatus,
+    });
+
+    String reportTitle = (await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('reports')
+            .doc(reportId)
+            .get())
+        .data()!['title'];
+
+    bool isDone = newStatus == 'Selesai';
+    await addNotification(userId, reportTitle, isDone);
   }
 }

@@ -6,10 +6,12 @@ import 'package:trash_scout/shared/theme/theme.dart';
 class CustomBottomNavigationItem extends StatelessWidget {
   final String imageUrl;
   final int index;
+  final String title;
 
   const CustomBottomNavigationItem({
     required this.imageUrl,
     required this.index,
+    required this.title,
   });
 
   @override
@@ -25,14 +27,13 @@ class CustomBottomNavigationItem extends StatelessWidget {
           imageUrl,
           width: 30,
           height: 30,
-          color: isActive ? lightGreenColor : whiteColor,
+          color: isActive ? lightGreenColor : blackColor,
         ),
-        Container(
-          width: 5,
-          height: 5,
-          decoration: BoxDecoration(
-            color: isActive ? lightGreenColor : Colors.transparent,
-            shape: BoxShape.circle,
+        Text(
+          title,
+          style: mediumTextStyle.copyWith(
+            color: isActive ? lightGreenColor : blackColor,
+            fontSize: 11,
           ),
         ),
       ],

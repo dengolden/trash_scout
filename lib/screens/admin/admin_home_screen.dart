@@ -19,7 +19,11 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminHomeScreen> {
   final user = FirebaseAuth.instance.currentUser!;
   final FirestoreService _firestoreService = FirestoreService();
+  bool _isLoading = true;
   String? displayName;
+  String? profileImageUrl;
+  final String defaultProfileImageUrl =
+      'https://firebasestorage.googleapis.com/v0/b/trash-scout-3c117.appspot.com/o/users%2Fdefault_profile_image%2Fuser%20default%20profile.png?alt=media&token=79ef1308-3d3d-477d-b566-0c4e66848a4d';
 
   int totalPending = 0;
   int totalInProcess = 0;
@@ -35,15 +39,47 @@ class _AdminScreenState extends State<AdminHomeScreen> {
     super.initState();
   }
 
-  Future<void> _getUserData() async {
-    String? name = await _firestoreService.getUserName(user.uid);
+  void logoutUser() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(),
+      ),
+    );
+  }
 
-    setState(() {
-      displayName = name;
-    });
+  Future<void> _getUserData() async {
+    DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+    String? name = await _firestoreService.getUserName(user.uid);
+    String? profileImageUrl;
+
+    Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+
+    if (userSnapshot.exists && userData.containsKey('profileImageUrl')) {
+      profileImageUrl = userSnapshot['profileImageUrl'];
+    } else {
+      profileImageUrl = defaultProfileImageUrl;
+    }
+
+    if (mounted) {
+      setState(() {
+        displayName = name;
+        this.profileImageUrl = profileImageUrl;
+      });
+    }
   }
 
   Future<void> _getReportStats() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     try {
       QuerySnapshot usersSnapshot =
           await FirebaseFirestore.instance.collection('users').get();
@@ -69,24 +105,34 @@ class _AdminScreenState extends State<AdminHomeScreen> {
         }
       }
 
-      setState(() {
-        totalPending = pendingCount;
-        totalInProcess = inProcessCount;
-        totalCompleted = completedCount;
-        totalReport = reportCount;
-      });
+      if (mounted) {
+        setState(() {
+          totalPending = pendingCount;
+          totalInProcess = inProcessCount;
+          totalCompleted = completedCount;
+          totalReport = reportCount;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error mendapatkan statistik laporan: $e');
+      _isLoading = false;
     }
   }
 
   Future<void> _getLatestReports() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
     try {
       QuerySnapshot usersSnapshot =
           await FirebaseFirestore.instance.collection('users').get();
       List<Map<String, dynamic>> allReports = [];
 
       for (var userDoc in usersSnapshot.docs) {
+        String userName = userDoc['name'];
         QuerySnapshot reportsSnapshot =
             await userDoc.reference.collection('reports').get();
 
@@ -96,78 +142,83 @@ class _AdminScreenState extends State<AdminHomeScreen> {
           reportData['date'] = (reportData['date'] as Timestamp).toDate();
           reportData['userId'] = userDoc.id;
           reportData['reportId'] = reportDoc.id;
+          reportData['userName'] = userName;
           allReports.add(reportData);
         }
       }
 
       allReports.sort((a, b) => b['date'].compareTo(a['date']));
 
-      setState(() {
-        latestReports = allReports.take(5).toList();
-      });
+      if (mounted) {
+        setState(() {
+          latestReports = allReports.take(5).toList();
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error mendapatkan laporan terbaru: $e');
+      _isLoading = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    void logoutUser() async {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: darkGreenColor,
-            ),
-          );
-        },
-      );
-
-      await FirebaseAuth.instance.signOut();
-      Navigator.pop(context);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LoginScreen(),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        automaticallyImplyLeading: false,
-        scrolledUnderElevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () {
-              logoutUser();
-            },
-            icon: Icon(
-              Icons.logout,
-            ),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: 16,
+          margin: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 35,
           ),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AdminHeader(userDisplayName: displayName),
-                SizedBox(height: 20),
-                ReportRecapAdmin(
-                  totalPending: totalPending,
-                  totalInProcess: totalInProcess,
-                  totalCompleted: totalCompleted,
-                  totalReport: totalReport,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    AdminHeader(
+                      userDisplayName: displayName,
+                      userProfilePict: profileImageUrl,
+                      defaultProfileImage: defaultProfileImageUrl,
+                    ),
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: whiteColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: IconButton(
+                          onPressed: () {
+                            logoutUser();
+                          },
+                          icon: Icon(
+                            Icons.logout,
+                            size: 26,
+                            color: blackColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                SizedBox(height: 20),
+                _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: darkGreenColor,
+                        ),
+                      )
+                    : ReportRecapAdmin(
+                        totalPending: totalPending,
+                        totalInProcess: totalInProcess,
+                        totalCompleted: totalCompleted,
+                        totalReport: totalReport,
+                      ),
                 SizedBox(height: 15),
                 Text(
                   'Laporan Terbaru:',
@@ -177,23 +228,31 @@ class _AdminScreenState extends State<AdminHomeScreen> {
                   ),
                 ),
                 for (var report in latestReports)
-                  ReportItemWidget(
-                    reportTitle: report['title'],
-                    status: mapStatus(report['status']),
-                    statusBackgroundColor: _getStatusColor(
-                      report['status'],
-                    ),
-                    imageUrl: report['imageUrl'],
-                    date: DateFormat('dd MMMM yyyy').format(report['date']),
-                    userId: report['userId'],
-                    reportId: report['reportId'],
-                    onUpdateStatus: _getLatestReports,
-                    description: report['description'],
-                    categories: List<String>.from(report['categories']),
-                    latitude: report['latitude'],
-                    longitude: report['longitude'],
-                    locationDetail: report['locationDetail'],
-                  ),
+                  _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: darkGreenColor,
+                          ),
+                        )
+                      : ReportItemWidget(
+                          user: report['userName'],
+                          reportTitle: report['title'],
+                          status: mapStatus(report['status']),
+                          statusBackgroundColor: _getStatusColor(
+                            report['status'],
+                          ),
+                          imageUrl: report['imageUrl'],
+                          date:
+                              DateFormat('dd MMMM yyyy').format(report['date']),
+                          userId: report['userId'],
+                          reportId: report['reportId'],
+                          onUpdateStatus: _getLatestReports,
+                          description: report['description'],
+                          categories: List<String>.from(report['categories']),
+                          latitude: report['latitude'],
+                          longitude: report['longitude'],
+                          locationDetail: report['locationDetail'],
+                        ),
                 SizedBox(height: 100),
               ],
             ),
@@ -218,9 +277,15 @@ class _AdminScreenState extends State<AdminHomeScreen> {
 }
 
 class AdminHeader extends StatelessWidget {
+  final String? userProfilePict;
   final String? userDisplayName;
+  final String defaultProfileImage;
 
-  const AdminHeader({required this.userDisplayName, super.key});
+  const AdminHeader(
+      {required this.userDisplayName,
+      required this.userProfilePict,
+      required this.defaultProfileImage,
+      super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -228,50 +293,28 @@ class AdminHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: AssetImage('assets/avatar_man.png'),
-                ),
-              ),
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              image: NetworkImage(userProfilePict ?? defaultProfileImage),
             ),
-            SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Halo $userDisplayName!',
-                  style: semiBoldTextStyle.copyWith(
-                    color: blackColor,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
+          ),
+        ),
+        SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Halo $userDisplayName!',
+              style: semiBoldTextStyle.copyWith(
+                color: blackColor,
+                fontSize: 20,
+              ),
             ),
           ],
-        ),
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: whiteColor,
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.notifications_none_rounded,
-                size: 26,
-                color: blackColor,
-              ),
-            ),
-          ),
         ),
       ],
     );

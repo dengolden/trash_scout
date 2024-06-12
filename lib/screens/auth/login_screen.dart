@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:trash_scout/provider/bottom_navigation_provider.dart';
 import 'package:trash_scout/screens/admin/main_admin_screen.dart';
 import 'package:trash_scout/screens/user/main_screen.dart';
 import 'package:trash_scout/screens/auth/sign_up_screen.dart';
@@ -23,20 +25,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
 // User Login
   Future<void> loginUser() async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: darkGreenColor,
-          ),
-        );
-      },
-    );
-
-    setState(() {
-      _error = '';
-    });
+    if (mounted) {
+      setState(() {
+        _error = '';
+      });
+    }
 
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -51,28 +44,26 @@ class _LoginScreenState extends State<LoginScreen> {
           .doc(user.uid)
           .get();
 
-      Navigator.pop(context);
-
-      if (userDoc.exists) {
+      if (mounted) {
         String role = userDoc['role'];
+        Provider.of<BottomNavigationProvider>(context, listen: false)
+            .currentIndex = 0;
         if (role == 'admin') {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AdminMainScreen(),
-              ),
-            );
-          }
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AdminMainScreen(),
+            ),
+            (Route<dynamic> route) => false,
+          );
         } else {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MainScreen(),
-              ),
-            );
-          }
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MainScreen(),
+            ),
+            (Route<dynamic> route) => false,
+          );
         }
       } else {
         if (mounted) {
@@ -99,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
               _error = 'Terjadi kesalahan. Silakan coba lagi.';
               break;
           }
-          Navigator.pop(context);
         });
       }
     }

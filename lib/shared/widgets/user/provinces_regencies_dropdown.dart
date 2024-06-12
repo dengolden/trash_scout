@@ -34,26 +34,32 @@ class _ProvincesRegenciesDropdownState
   Future<void> _fetchProvinces() async {
     try {
       final provinces = await ApiService().getProvinces();
-      setState(() {
-        _provinces = provinces;
-      });
+      if (mounted) {
+        setState(() {
+          _provinces = provinces;
+        });
+      }
     } catch (e) {
       SnackBar(content: Text('Gagal Memuat Provinsi'));
     }
   }
 
   Future<void> _fetchRegencies(String provinceId) async {
-    setState(() {
-      _regencies = [];
-      _selectedRegencyId = null;
-      _selectedRegencyName = null;
-    });
+    if (mounted) {
+      setState(() {
+        _regencies = [];
+        _selectedRegencyId = null;
+        _selectedRegencyName = null;
+      });
+    }
 
     try {
       final regencies = await ApiService().getRegencies(provinceId);
-      setState(() {
-        _regencies = regencies;
-      });
+      if (mounted) {
+        setState(() {
+          _regencies = regencies;
+        });
+      }
     } catch (e) {
       SnackBar(content: Text('Gagal Memuat Kabupaten'));
     }

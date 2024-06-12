@@ -6,20 +6,22 @@ import 'package:trash_scout/shared/date_formatter.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/report_history.dart';
 
-class SeeAllHistoryPage extends StatefulWidget {
-  const SeeAllHistoryPage({super.key});
+class SeeAllHistoryScreen extends StatefulWidget {
+  const SeeAllHistoryScreen({super.key});
 
   @override
-  State<SeeAllHistoryPage> createState() => _SeeAllHistoryPageState();
+  State<SeeAllHistoryScreen> createState() => _SeeAllHistoryScreenState();
 }
 
-class _SeeAllHistoryPageState extends State<SeeAllHistoryPage> {
+class _SeeAllHistoryScreenState extends State<SeeAllHistoryScreen> {
   String _selectedStatus = 'Dibuat';
 
   void _updateStatus(String status) {
-    setState(() {
-      _selectedStatus = status;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedStatus = status;
+      });
+    }
   }
 
   Map<String, List<QueryDocumentSnapshot>> _groupReportsByDate(
@@ -86,7 +88,13 @@ class _SeeAllHistoryPageState extends State<SeeAllHistoryPage> {
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(
-                        child: Text('Belum ada laporan untuk status ini'));
+                      child: Text(
+                        'Belum ada laporan untuk status ini',
+                        style: regularTextStyle.copyWith(
+                          color: lightGreyColor,
+                        ),
+                      ),
+                    );
                   }
                   var reports = snapshot.data!.docs;
                   var groupedReports = _groupReportsByDate(reports);

@@ -13,14 +13,11 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            buildContent(context),
-            CustomBottomNavigation(),
-          ],
-        ),
+      body: Stack(
+        children: [
+          buildContent(context),
+          CustomBottomNavigation(),
+        ],
       ),
     );
   }
@@ -53,19 +50,14 @@ class CustomBottomNavigation extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       child: Container(
         width: double.infinity,
-        height: 55,
-        padding: EdgeInsets.symmetric(
-          horizontal: 54,
-          vertical: 9,
-        ),
-        margin: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 20,
+        height: 60,
+        padding: EdgeInsets.only(
+          left: 54,
+          right: 54,
+          top: 5,
         ),
         decoration: BoxDecoration(
-          color: blackColor,
-          borderRadius: BorderRadius.circular(20),
+          color: whiteColor,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -73,6 +65,7 @@ class CustomBottomNavigation extends StatelessWidget {
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 0,
               child: CustomBottomNavigationItem(
+                title: 'Home',
                 imageUrl: 'assets/home_icon.png',
                 index: 0,
               ),
@@ -80,6 +73,7 @@ class CustomBottomNavigation extends StatelessWidget {
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 1,
               child: CustomBottomNavigationItem(
+                title: 'Map',
                 imageUrl: 'assets/map_icon.png',
                 index: 1,
               ),
@@ -87,6 +81,7 @@ class CustomBottomNavigation extends StatelessWidget {
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 2,
               child: CustomBottomNavigationItem(
+                title: 'Profile',
                 imageUrl: 'assets/profile_icon.png',
                 index: 2,
               ),

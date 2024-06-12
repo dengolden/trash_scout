@@ -3,9 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:trash_scout/screens/user/create_report_page.dart';
-import 'package:trash_scout/screens/auth/login_screen.dart';
-import 'package:trash_scout/screens/user/notification_history_screen.dart';
-import 'package:trash_scout/screens/user/see_all_history_page.dart';
+import 'package:trash_scout/screens/user/mail_box_screen.dart';
+import 'package:trash_scout/screens/user/see_all_history_screen.dart';
 import 'package:trash_scout/services/firestore_service.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/custom_button.dart';
@@ -34,54 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _getUserData() async {
     String? name = await _firestoreService.getUserName(user.uid);
     String? photo = await _firestoreService.getUserPhoto(user.uid);
-    setState(() {
-      displayName = name;
-      displayProfilePicture = photo;
-    });
-  }
-
-  void logoutUser() async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Center(
-          child: CircularProgressIndicator(
-            color: darkGreenColor,
-          ),
-        );
-      },
-    );
-
-    await FirebaseAuth.instance.signOut();
-    Navigator.pop(context);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => LoginScreen(),
-      ),
-    );
+    if (mounted) {
+      setState(() {
+        displayName = name;
+        displayProfilePicture = photo;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        backgroundColor: backgroundColor,
-        actions: [
-          IconButton(
-            onPressed: () {
-              logoutUser();
-            },
-            icon: Icon(Icons.logout),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 16),
+          margin: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 35,
+          ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -170,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SeeAllHistoryPage(),
+                            builder: (context) => SeeAllHistoryScreen(),
                           ),
                         );
                       },
@@ -204,11 +174,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                     var reports = snapshot.data!.docs;
                     if (reports.isEmpty) {
-                      return Text(
-                        'Tidak ada laporan terbaru.',
-                        style: regularTextStyle.copyWith(
-                          color: blackColor,
-                          fontSize: 16,
+                      return Center(
+                        child: Text(
+                          'Tidak ada laporan terbaru.',
+                          style: regularTextStyle.copyWith(
+                            color: lightGreyColor,
+                            fontSize: 16,
+                          ),
                         ),
                       );
                     }
@@ -322,19 +294,25 @@ class HomeScreenHeader extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: IconButton(
-              onPressed: () {
+            child: GestureDetector(
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => NotificationHistoryScreen(),
+                    builder: (context) => MailBoxScreen(),
                   ),
                 );
               },
-              icon: Icon(
-                Icons.notifications_none_rounded,
-                size: 26,
-                color: blackColor,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(
+                      'assets/mail_icon.png',
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

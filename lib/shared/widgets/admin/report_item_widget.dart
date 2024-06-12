@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:trash_scout/screens/user/detail_report_page.dart';
+import 'package:trash_scout/screens/admin/admin_detail_report.dart';
+import 'package:trash_scout/services/firestore_service.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 
 class ReportItemWidget extends StatelessWidget {
@@ -17,6 +17,7 @@ class ReportItemWidget extends StatelessWidget {
   final String latitude;
   final String longitude;
   final String locationDetail;
+  final String user;
   final VoidCallback? onTap;
 
   const ReportItemWidget({
@@ -32,6 +33,7 @@ class ReportItemWidget extends StatelessWidget {
     required this.categories,
     required this.latitude,
     required this.longitude,
+    required this.user,
     required this.locationDetail,
     this.onTap,
   });
@@ -45,11 +47,12 @@ class ReportItemWidget extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DetailReportPage(
+                  builder: (context) => AdminDetailReport(
                     reportTitle: reportTitle,
                     status: status,
                     imageUrl: imageUrl,
                     date: date,
+                    user: user,
                     description: description,
                     categories: categories,
                     latitude: latitude,
@@ -183,27 +186,21 @@ class ReportItemWidget extends StatelessWidget {
   }
 
   void _updateReportStatus(BuildContext context, String newStatus) async {
-    // Update status di Firestore
-    DocumentReference reportRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('reports')
-        .doc(reportId);
-
-    DocumentSnapshot reportSnapshot = await reportRef.get();
-
-    if (reportSnapshot.exists) {
-      await reportRef.update({'status': newStatus});
+    try {
+      FirestoreService firestoreService = FirestoreService();
+      await firestoreService.updateReportStatus(userId, reportId, newStatus);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Status laporan diperbarui menjadi $newStatus')),
+        SnackBar(
+          content: Text('Status laporan diperbarui menjadi $newStatus'),
+          duration: Duration(seconds: 1),
+        ),
       );
       onUpdateStatus();
-    } else {
-      print('Report not found: $userId, $reportId');
+    } catch (e) {
+      print('Error updating report status: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: Report not found')),
+        SnackBar(content: Text('Error: Failed to update report status')),
       );
     }
-    (context as Element).markNeedsBuild();
   }
 }

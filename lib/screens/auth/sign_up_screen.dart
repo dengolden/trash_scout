@@ -138,27 +138,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     SizedBox(height: 25),
                     GenderForm(
                       onChanged: (value) {
-                        setState(() {
-                          _selectedGender = value;
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _selectedGender = value;
+                          });
+                        }
                       },
                     ),
                     SizedBox(height: 25),
                     ProvincesRegenciesDropdown(
                       onProvinceChanged: (value) {
-                        setState(() {
-                          _selectedProvince = value['name'];
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _selectedProvince = value['name'];
+                          });
+                        }
                       },
                       onRegencyChanged: (value) {
-                        setState(() {
-                          _selectedRegency = value['name'];
-                        });
+                        if (mounted) {
+                          setState(() {
+                            _selectedRegency = value['name'];
+                          });
+                        }
                       },
                     ),
                     SizedBox(height: 25),
                     CustomTextform(
-                      formTitle: 'No.HP (Opsional)',
+                      formTitle: 'No.HP',
                       textInputType: TextInputType.phone,
                       hintText: 'Masukkan No.HP',
                       controller: _phoneNumberController,

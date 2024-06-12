@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trash_scout/provider/bottom_navigation_provider.dart';
-import 'package:trash_scout/screens/admin/admin_profile_screen.dart';
 import 'package:trash_scout/screens/admin/admin_home_screen.dart';
 import 'package:trash_scout/screens/admin/report_manage_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
@@ -35,8 +34,6 @@ Widget buildContent(BuildContext context) {
       return AdminHomeScreen();
     case 1:
       return ReportManageScreen();
-    case 2:
-      return AdminProfileScreen();
     default:
       return AdminHomeScreen();
   }
@@ -53,26 +50,22 @@ class AdminBottomNavigation extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       child: Container(
         width: double.infinity,
-        height: 55,
-        padding: EdgeInsets.symmetric(
-          horizontal: 54,
-          vertical: 9,
-        ),
-        margin: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 20,
+        height: 60,
+        padding: EdgeInsets.only(
+          left: 54,
+          right: 54,
+          top: 5,
         ),
         decoration: BoxDecoration(
-          color: blackColor,
-          borderRadius: BorderRadius.circular(20),
+          color: whiteColor,
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 0,
               child: CustomBottomNavigationItem(
+                title: 'Home',
                 imageUrl: 'assets/home_icon.png',
                 index: 0,
               ),
@@ -80,15 +73,9 @@ class AdminBottomNavigation extends StatelessWidget {
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 1,
               child: CustomBottomNavigationItem(
+                title: 'Reports',
                 imageUrl: 'assets/document_icon.png',
                 index: 1,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => navigationProvider.currentIndex = 2,
-              child: CustomBottomNavigationItem(
-                imageUrl: 'assets/profile_icon.png',
-                index: 2,
               ),
             ),
           ],

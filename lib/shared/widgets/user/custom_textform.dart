@@ -32,9 +32,11 @@ class _CustomTextformState extends State<CustomTextform> {
   void initState() {
     super.initState();
     _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
+      if (mounted) {
+        setState(() {
+          _isFocused = _focusNode.hasFocus;
+        });
+      }
     });
   }
 

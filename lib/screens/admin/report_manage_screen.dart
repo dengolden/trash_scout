@@ -24,9 +24,11 @@ class _ReportManageScreenState extends State<ReportManageScreen> {
   }
 
   Future<void> _getReportsByStatus(String status) async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       QuerySnapshot usersSnapshot =
@@ -35,6 +37,7 @@ class _ReportManageScreenState extends State<ReportManageScreen> {
 
       for (var userDoc in usersSnapshot.docs) {
         Query query = userDoc.reference.collection('reports');
+        String userName = userDoc['name'];
 
         if (status != 'Semua') {
           String firestoreStatus = mapStatusToFirestore(status);
@@ -47,31 +50,39 @@ class _ReportManageScreenState extends State<ReportManageScreen> {
         for (var reportDoc in reportsSnapshot.docs) {
           Map<String, dynamic> reportData =
               reportDoc.data() as Map<String, dynamic>;
+
           reportData['date'] = (reportData['date'] as Timestamp).toDate();
           reportData['userId'] = userDoc.id;
           reportData['reportId'] = reportDoc.id;
+          reportData['userName'] = userName;
           filteredReports.add(reportData);
         }
       }
 
       print('Reports retrieved: ${filteredReports.length}');
-      setState(() {
-        reports = filteredReports;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          reports = filteredReports;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error getting reports: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _updateStatus(String status) {
-    setState(() {
-      _selectedStatus = status;
-      _getReportsByStatus(status);
-    });
+    if (mounted) {
+      setState(() {
+        _selectedStatus = status;
+        _getReportsByStatus(status);
+      });
+    }
   }
 
   void _refreshReports() {
@@ -131,12 +142,15 @@ class _ReportManageScreenState extends State<ReportManageScreen> {
                           ),
                         )
                       : ListView.builder(
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
                           itemCount: reports.length,
                           itemBuilder: (context, index) {
                             final report = reports[index];
                             return ReportItemWidget(
                               reportTitle: report['title'],
                               reportId: report['reportId'],
+                              user: report['userName'],
                               userId: report['userId'],
                               status: mapStatus(report['status']),
                               imageUrl: report['imageUrl'],
@@ -155,6 +169,9 @@ class _ReportManageScreenState extends State<ReportManageScreen> {
                             );
                           },
                         ),
+            ),
+            SizedBox(
+              height: 70,
             )
           ],
         ),
