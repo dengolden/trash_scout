@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:trash_scout/screens/auth/login_screen.dart';
+import 'package:trash_scout/screens/user/change_pw_screen.dart';
 import 'package:trash_scout/screens/user/edit_profile_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/utils/capitalize.dart';
@@ -96,6 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       image: DecorationImage(
+                        fit: BoxFit.cover,
                         image: NetworkImage(profileImageUrl ??
                             'https://firebasestorage.googleapis.com/v0/b/trash-scout-3c117.appspot.com/o/users%2Fdefault_profile_image%2Fuser%20default%20profile.png?alt=media&token=79ef1308-3d3d-477d-b566-0c4e66848a4d'),
                       ),
@@ -212,10 +214,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       Expanded(child: Container()),
-                      Icon(
-                        Icons.navigate_next_rounded,
-                        size: 30,
-                        color: blackColor,
+                      IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChangePwScreen(),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.navigate_next_rounded,
+                          size: 30,
+                          color: blackColor,
+                        ),
                       ),
                     ],
                   ),

@@ -6,6 +6,7 @@ import 'package:trash_scout/provider/bottom_navigation_provider.dart';
 import 'package:trash_scout/screens/admin/main_admin_screen.dart';
 import 'package:trash_scout/screens/user/main_screen.dart';
 import 'package:trash_scout/screens/auth/sign_up_screen.dart';
+import 'package:trash_scout/screens/user/reset_pw_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/custom_button.dart';
 import 'package:trash_scout/shared/widgets/user/custom_textform.dart';
@@ -170,7 +171,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               padding: const EdgeInsets.all(0),
                               alignment: Alignment.topRight,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResetPasswordScreen(),
+                                ),
+                              );
+                            },
                             child: Text(
                               'Lupa kata sandi',
                               style: mediumTextStyle.copyWith(

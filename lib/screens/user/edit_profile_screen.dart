@@ -141,6 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
+                      fit: BoxFit.cover,
                       image: _selectedImage != null
                           ? FileImage(_selectedImage!)
                           : NetworkImage(_photoUrl ?? _profileImage ?? '')

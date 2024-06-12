@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:trash_scout/provider/bottom_navigation_provider.dart';
 import 'package:trash_scout/screens/user/home_screen.dart';
-import 'package:trash_scout/screens/user/map_screen.dart';
 import 'package:trash_scout/screens/user/profile_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/custom_bottom_navigation_item.dart';
@@ -31,8 +30,6 @@ Widget buildContent(BuildContext context) {
     case 0:
       return HomeScreen();
     case 1:
-      return MapScreen();
-    case 2:
       return ProfileScreen();
     default:
       return HomeScreen();
@@ -50,17 +47,17 @@ class CustomBottomNavigation extends StatelessWidget {
       alignment: Alignment.bottomCenter,
       child: Container(
         width: double.infinity,
-        height: 60,
+        height: 70,
         padding: EdgeInsets.only(
           left: 54,
           right: 54,
-          top: 5,
+          top: 10,
         ),
         decoration: BoxDecoration(
           color: whiteColor,
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 0,
@@ -73,17 +70,9 @@ class CustomBottomNavigation extends StatelessWidget {
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 1,
               child: CustomBottomNavigationItem(
-                title: 'Map',
-                imageUrl: 'assets/map_icon.png',
-                index: 1,
-              ),
-            ),
-            GestureDetector(
-              onTap: () => navigationProvider.currentIndex = 2,
-              child: CustomBottomNavigationItem(
                 title: 'Profile',
                 imageUrl: 'assets/profile_icon.png',
-                index: 2,
+                index: 1,
               ),
             ),
           ],
