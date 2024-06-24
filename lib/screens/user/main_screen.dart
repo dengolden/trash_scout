@@ -5,6 +5,7 @@ import 'package:trash_scout/screens/user/home_screen.dart';
 import 'package:trash_scout/screens/user/profile_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/custom_bottom_navigation_item.dart';
+import 'package:trash_scout/shared/widgets/user/leaderboard_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -30,6 +31,8 @@ Widget buildContent(BuildContext context) {
     case 0:
       return HomeScreen();
     case 1:
+      return LeaderboardScreen();
+    case 2:
       return ProfileScreen();
     default:
       return HomeScreen();
@@ -57,7 +60,7 @@ class CustomBottomNavigation extends StatelessWidget {
           color: whiteColor,
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 0,
@@ -70,9 +73,17 @@ class CustomBottomNavigation extends StatelessWidget {
             GestureDetector(
               onTap: () => navigationProvider.currentIndex = 1,
               child: CustomBottomNavigationItem(
+                title: 'Leaderboard',
+                imageUrl: 'assets/leaderboard_icon.png',
+                index: 1,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => navigationProvider.currentIndex = 2,
+              child: CustomBottomNavigationItem(
                 title: 'Profile',
                 imageUrl: 'assets/profile_icon.png',
-                index: 1,
+                index: 2,
               ),
             ),
           ],
