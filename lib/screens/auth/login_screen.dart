@@ -96,6 +96,53 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Future<void> _signInWithGoogle() async {
+  //   final GoogleSignIn googleSignIn = GoogleSignIn();
+  //   try {
+  //     final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+  //     if (googleUser == null) return;
+
+  //     final GoogleSignInAuthentication googleAuth =
+  //         await googleUser.authentication;
+  //     final AuthCredential credential = GoogleAuthProvider.credential(
+  //       accessToken: googleAuth.accessToken,
+  //       idToken: googleAuth.idToken,
+  //     );
+
+  //     UserCredential userCredential =
+  //         await _auth.signInWithCredential(credential);
+  //     User user = userCredential.user!;
+
+  //     DocumentSnapshot userDoc = await FirebaseFirestore.instance
+  //         .collection('users')
+  //         .doc(user.uid)
+  //         .get();
+
+  //     if (mounted) {
+  //       String role = userDoc['role'];
+  //       Provider.of<BottomNavigationProvider>(context, listen: false)
+  //           .currentIndex = 0;
+  //       if (role == 'admin') {
+  //         Navigator.pushAndRemoveUntil(
+  //           context,
+  //           MaterialPageRoute(builder: (context) => AdminMainScreen()),
+  //           (Route<dynamic> route) => false,
+  //         );
+  //       } else {
+  //         Navigator.pushAndRemoveUntil(
+  //           context,
+  //           MaterialPageRoute(builder: (context) => MainScreen()),
+  //           (Route<dynamic> route) => false,
+  //         );
+  //       }
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       _error = 'Failed to sign in with Google: $e';
+  //     });
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Container(
                   margin: const EdgeInsets.only(
-                    top: 170,
+                    top: 150,
                     left: 16,
                     right: 16,
                   ),
@@ -195,6 +242,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         buttonText: 'Masuk',
                       ),
+                      SizedBox(height: 12),
+                      // GestureDetector(
+                      //   onTap: _signInWithGoogle,
+                      //   child: Container(
+                      //     width: double.infinity,
+                      //     height: 60,
+                      //     decoration: BoxDecoration(
+                      //       borderRadius: BorderRadius.circular(12),
+                      //       border: Border.all(
+                      //         color: darkGreenColor,
+                      //         width: 1,
+                      //       ),
+                      //     ),
+                      //     child: Center(
+                      //       child: Text(
+                      //         'Masuk dengan Google',
+                      //         style: semiBoldTextStyle.copyWith(
+                      //           color: darkGreenColor,
+                      //           fontSize: 24,
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                       if (_error.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 20),
