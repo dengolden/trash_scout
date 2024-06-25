@@ -5,7 +5,7 @@ import 'package:trash_scout/screens/user/home_screen.dart';
 import 'package:trash_scout/screens/user/profile_screen.dart';
 import 'package:trash_scout/shared/theme/theme.dart';
 import 'package:trash_scout/shared/widgets/user/custom_bottom_navigation_item.dart';
-import 'package:trash_scout/shared/widgets/user/leaderboard_screen.dart';
+import 'package:trash_scout/screens/user/leaderboard_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});

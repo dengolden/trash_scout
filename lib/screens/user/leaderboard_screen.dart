@@ -140,7 +140,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     padding: EdgeInsets.zero,
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: users.length > 5 ? 5 : users.length,
+                    itemCount: 5,
                     itemBuilder: (context, index) {
                       return LeaderboardItem(
                         user: users[index],
@@ -148,11 +148,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       );
                     },
                   ),
-                  if (currentUserRank > 5)
-                    LeaderboardItem(
-                      user: currentUser!,
-                      rank: currentUserRank,
-                    ),
+                  // if (currentUserRank > 5)
+                  //   LeaderboardItem(
+                  //     user: currentUser!,
+                  //     rank: currentUserRank,
+                  //   ),
                 ],
               ),
             ),
